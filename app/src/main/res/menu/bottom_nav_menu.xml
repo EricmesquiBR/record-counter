@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
+    <item
+        android:id="@+id/nav_stopwatch"
+        android:icon="@drawable/ic_stopwatch"
+        android:title="Stopwatch" />
+    <item
+        android:id="@+id/nav_saved_times"
+        android:icon="@drawable/ic_saved_times"
+        android:title="Saved Times" />
+    <item
+        android:id="@+id/nav_about"
+        android:icon="@drawable/ic_about"
+        android:title="About" />
 </menu>
