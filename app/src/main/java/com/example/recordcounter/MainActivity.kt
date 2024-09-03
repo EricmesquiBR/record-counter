@@ -9,14 +9,6 @@ import com.example.recordcounter.ui.about.AboutFragment
 import com.example.recordcounter.ui.savedtimes.SavedTimesFragment
 import com.example.recordcounter.ui.stopwatch.StopwatchFragment
 
-
-//class MainActivity : AppCompatActivity() {
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_main)
-//    }
-//}
-
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 

@@ -1,5 +1,6 @@
 package com.example.recordcounter.ui.stopwatch
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,11 +11,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModelProvider
+import com.example.recordcounter.NameTimeActivity
 import com.example.recordcounter.R
 import com.example.recordcounter.databinding.FragmentStopwatchBinding
 import com.example.recordcounter.utils.TimerService
 import kotlin.math.roundToInt
 
+@Suppress("DEPRECATION")
 class StopwatchFragment : Fragment() {
 
     private lateinit var binding: FragmentStopwatchBinding
@@ -87,10 +90,22 @@ class StopwatchFragment : Fragment() {
     }
 
     private fun saveTime() {
-        // Temporary alert for saved time
-        val timeString = getTimeStringFromDouble(time)
+        var timeString = getTimeStringFromDouble(time)
         binding.root.let {
             android.widget.Toast.makeText(it.context, "Saved time is $timeString", android.widget.Toast.LENGTH_SHORT).show()
+        }
+        val intent = Intent(activity, NameTimeActivity::class.java).apply {
+            putExtra(TimerService.TIMER_EXTRA, time)
+        }
+        startActivityForResult(intent, REQUEST_CODE_SAVE_TIME)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_SAVE_TIME && resultCode == Activity.RESULT_OK) {
+            val name = data?.getStringExtra("RECORD_NAME")
+            val timeString = data?.getStringExtra("RECORD_TIME")
+            android.widget.Toast.makeText(context, "Saved time: $timeString with name: $name", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -104,6 +119,11 @@ class StopwatchFragment : Fragment() {
         super.onDestroy()
         activity?.unregisterReceiver(updateTime)
     }
+
+    companion object {
+        private const val REQUEST_CODE_SAVE_TIME = 1
+    }
+
 }
 
 
