@@ -41,6 +41,10 @@ class StopwatchFragment : Fragment() {
             saveTime()
         }
 
+        binding.btnReset.setOnClickListener {
+            resetTime()
+        }
+
         return binding.root
     }
 
@@ -88,6 +92,12 @@ class StopwatchFragment : Fragment() {
         binding.root.let {
             android.widget.Toast.makeText(it.context, "Saved time is $timeString", android.widget.Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun resetTime() {
+        stopTimer()
+        time = 0.0
+        binding.timer.text = getTimeStringFromDouble(time)
     }
 
     override fun onDestroy() {
