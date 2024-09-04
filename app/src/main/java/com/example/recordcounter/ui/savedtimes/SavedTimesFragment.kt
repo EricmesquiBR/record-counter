@@ -1,32 +1,39 @@
+// SavedTimesFragment.kt
 package com.example.recordcounter.ui.savedtimes
 
-import androidx.lifecycle.ViewModelProvider
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.recordcounter.R
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.recordcounter.databinding.FragmentSavedTimesBinding
 
 class SavedTimesFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = SavedTimesFragment()
-    }
-
     private lateinit var viewModel: SavedTimesViewModel
+    private lateinit var binding: FragmentSavedTimesBinding
+    private lateinit var adapter: TimeRecordAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_saved_times, container, false)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        binding = FragmentSavedTimesBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(SavedTimesViewModel::class.java)
-        // TODO: Use the ViewModel
-    }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
+        adapter = TimeRecordAdapter()
+
+        binding.recyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = this@SavedTimesFragment.adapter
+        }
+
+        viewModel = ViewModelProvider(this)[SavedTimesViewModel::class.java]
+        viewModel.getAllRecords().observe(viewLifecycleOwner) { records ->
+            records?.let { adapter.submitList(it) }
+        }
+    }
 }
