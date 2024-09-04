@@ -7,15 +7,20 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import com.example.recordcounter.ui.savedtimes.SavedTimesViewModel
 import com.example.recordcounter.utils.TimerService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
-
 class NameTimeActivity : AppCompatActivity() {
 
     private lateinit var tvTime: TextView
     private lateinit var etName: EditText
     private lateinit var btnSave: Button
     private lateinit var btnCancel: Button
+    private lateinit var viewModel: SavedTimesViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

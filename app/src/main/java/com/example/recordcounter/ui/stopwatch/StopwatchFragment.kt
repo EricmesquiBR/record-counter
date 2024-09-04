@@ -92,7 +92,7 @@ class StopwatchFragment : Fragment() {
     private fun saveTime() {
         var timeString = getTimeStringFromDouble(time)
         binding.root.let {
-            android.widget.Toast.makeText(it.context, "Saved time is $timeString", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(it.context, "Time to be saved: $timeString", android.widget.Toast.LENGTH_SHORT).show()
         }
         val intent = Intent(activity, NameTimeActivity::class.java).apply {
             putExtra(TimerService.TIMER_EXTRA, time)
