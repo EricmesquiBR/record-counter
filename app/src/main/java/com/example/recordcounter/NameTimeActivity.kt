@@ -1,3 +1,4 @@
+// NameTimeActivity.kt
 package com.example.recordcounter
 
 import android.app.Activity
@@ -9,11 +10,14 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.recordcounter.ui.savedtimes.SavedTimesViewModel
+import com.example.recordcounter.ui.savedtimes.TimeRecord
 import com.example.recordcounter.utils.TimerService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
+
 class NameTimeActivity : AppCompatActivity() {
 
     private lateinit var tvTime: TextView
@@ -30,6 +34,9 @@ class NameTimeActivity : AppCompatActivity() {
         etName = findViewById(R.id.etName)
         btnSave = findViewById(R.id.btnSave)
         btnCancel = findViewById(R.id.btnCancel)
+
+        // Initialize ViewModel here
+        viewModel = ViewModelProvider(this)[SavedTimesViewModel::class.java]
 
         // Get the time from the intent
         val time = intent.getDoubleExtra(TimerService.TIMER_EXTRA, 0.0)
@@ -55,14 +62,21 @@ class NameTimeActivity : AppCompatActivity() {
     private fun saveRecord() {
         val name = etName.text.toString()
         if (name.isNotBlank()) {
-            val resultIntent = Intent().apply {
-                putExtra("RECORD_NAME", name)
-                putExtra("RECORD_TIME", tvTime.text.toString())
+            val timeString = tvTime.text.toString()
+
+            // Use runBlocking to ensure the operation completes before proceeding
+            GlobalScope.launch(Dispatchers.IO) {
+                runBlocking {
+                    viewModel.insert(TimeRecord(name = name, time = timeString))
+                }
+
+                // Move back to main thread after insertion
+                launch(Dispatchers.Main) {
+                    setResult(Activity.RESULT_OK)
+                    finish()
+                }
             }
-            setResult(Activity.RESULT_OK, resultIntent)
-            finish()
         } else {
-            // Handle empty name input
             etName.error = "Please enter a name"
         }
     }
