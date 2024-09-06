@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.recordcounter.ui.stopwatch
 
 import android.app.Activity
@@ -16,6 +18,13 @@ import com.example.recordcounter.R
 import com.example.recordcounter.databinding.FragmentStopwatchBinding
 import com.example.recordcounter.utils.TimerService
 import kotlin.math.roundToInt
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.util.Log
+import android.widget.Toast
+import kotlin.math.abs
 
 @Suppress("DEPRECATION")
 class StopwatchFragment : Fragment() {
@@ -26,12 +35,20 @@ class StopwatchFragment : Fragment() {
     private lateinit var serviceIntent: Intent
     private var time = 0.0
 
+    // Sensor variables
+    private lateinit var sensorManager: SensorManager
+    private val accelerometerListener = AccelerometerListener()
+    private var lastAcceleration = FloatArray(3)
+    private var lastAccelerationTime = System.currentTimeMillis()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding = FragmentStopwatchBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(this).get(StopwatchViewModel::class.java)
+
+        sensorManager = activity?.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
         serviceIntent = Intent(activity?.applicationContext, TimerService::class.java)
         activity?.registerReceiver(updateTime, IntentFilter(TimerService.TIMER_UPDATED))
@@ -49,6 +66,17 @@ class StopwatchFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        sensorManager.registerListener(accelerometerListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(accelerometerListener)
     }
 
     private fun getTimeStringFromDouble(time: Double): String {
@@ -70,10 +98,11 @@ class StopwatchFragment : Fragment() {
     }
 
     private fun startStop() {
-        if (!timeStarted)
+        if (!timeStarted) {
             startTimer()
-        else
+        } else {
             stopTimer()
+        }
     }
 
     private fun startTimer() {
@@ -90,10 +119,8 @@ class StopwatchFragment : Fragment() {
     }
 
     private fun saveTime() {
-        var timeString = getTimeStringFromDouble(time)
-        binding.root.let {
-            android.widget.Toast.makeText(it.context, "Time to be saved: $timeString", android.widget.Toast.LENGTH_SHORT).show()
-        }
+        val timeString = getTimeStringFromDouble(time)
+        Toast.makeText(context, "Time to be saved: $timeString", Toast.LENGTH_SHORT).show()
         val intent = Intent(activity, NameTimeActivity::class.java).apply {
             putExtra(TimerService.TIMER_EXTRA, time)
         }
@@ -105,7 +132,7 @@ class StopwatchFragment : Fragment() {
         if (requestCode == REQUEST_CODE_SAVE_TIME && resultCode == Activity.RESULT_OK) {
             val name = data?.getStringExtra("RECORD_NAME")
             val timeString = data?.getStringExtra("RECORD_TIME")
-            android.widget.Toast.makeText(context, "Saved time: $timeString with name: $name", android.widget.Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Saved time: $timeString with name: $name", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -120,10 +147,57 @@ class StopwatchFragment : Fragment() {
         activity?.unregisterReceiver(updateTime)
     }
 
-    companion object {
-        private const val REQUEST_CODE_SAVE_TIME = 1
+    inner class AccelerometerListener : SensorEventListener {
+        private var lastActionTime = System.currentTimeMillis()
+        private val COOLDOWN_PERIOD = 2000L // 2 seconds cooldown period
+
+        override fun onSensorChanged(event: SensorEvent) {
+            val x = event.values[0]
+            val y = event.values[1]
+            val z = event.values[2]
+
+            if (lastAcceleration.isNotEmpty()) {
+                val deltaX = abs(x - lastAcceleration[0])
+                val deltaY = abs(y - lastAcceleration[1])
+                val deltaZ = abs(z - lastAcceleration[2])
+
+                // Detect large movements
+                if ((deltaX > LARGE_MOVEMENT_THRESHOLD || deltaY > LARGE_MOVEMENT_THRESHOLD || deltaZ > LARGE_MOVEMENT_THRESHOLD)
+                    && System.currentTimeMillis() - lastActionTime > COOLDOWN_PERIOD) {
+                    performLargeMovementAction()
+                    lastActionTime = System.currentTimeMillis()
+                }
+
+                // Detect taps
+                if ((deltaX > TAP_THRESHOLD || deltaY > TAP_THRESHOLD || deltaZ > TAP_THRESHOLD)
+                    && System.currentTimeMillis() - lastActionTime > COOLDOWN_PERIOD) {
+                    performTapAction()
+                    lastActionTime = System.currentTimeMillis()
+                }
+            }
+
+            lastAcceleration = event.values.clone()
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+        private fun performLargeMovementAction() {
+            Log.d("AccelerometerListener", "Large movement detected")
+            if (!timeStarted) {
+                startTimer()
+            }
+        }
+
+        private fun performTapAction() {
+            Log.d("AccelerometerListener", "Tap detected")
+            // No action needed for tap; keeping this function for any future implementation
+        }
     }
 
+    companion object {
+        private const val REQUEST_CODE_SAVE_TIME = 1
+        private const val LARGE_MOVEMENT_THRESHOLD = 8f
+        private const val TAP_THRESHOLD = 2f
+        private const val COOLDOWN_PERIOD = 2000L // 2 seconds cooldown period
+    }
 }
-
-

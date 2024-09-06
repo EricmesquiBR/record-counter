@@ -1,3 +1,4 @@
+// TimeRecordAdapter.kt
 package com.example.recordcounter.ui.savedtimes
 
 import android.view.LayoutInflater
@@ -7,21 +8,29 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.recordcounter.databinding.ItemTimeRecordBinding
 
-class TimeRecordAdapter : ListAdapter<TimeRecord, TimeRecordAdapter.TimeRecordViewHolder>(TimeRecordDiffCallback()) {
+class TimeRecordAdapter(private val onDeleteListener: (TimeRecord) -> Unit) :
+    ListAdapter<TimeRecord, TimeRecordAdapter.TimeRecordViewHolder>(TimeRecordDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimeRecordViewHolder {
         val binding = ItemTimeRecordBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return TimeRecordViewHolder(binding)
+        return TimeRecordViewHolder(binding, onDeleteListener)
     }
 
     override fun onBindViewHolder(holder: TimeRecordViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class TimeRecordViewHolder(private val binding: ItemTimeRecordBinding) : RecyclerView.ViewHolder(binding.root) {
+    class TimeRecordViewHolder(
+        private val binding: ItemTimeRecordBinding,
+        private val onDeleteListener: (TimeRecord) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(timeRecord: TimeRecord) {
             binding.tvName.text = timeRecord.name
             binding.tvTime.text = timeRecord.time
+
+            binding.btnDelete.setOnClickListener {
+                onDeleteListener(timeRecord)
+            }
         }
     }
 }

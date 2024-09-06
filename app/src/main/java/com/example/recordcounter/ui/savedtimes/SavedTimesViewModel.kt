@@ -20,15 +20,25 @@ class SavedTimesViewModel(application: Application) : AndroidViewModel(applicati
         return repository.allRecords
     }
 
-    suspend fun insert(timeRecord: TimeRecord) {
-        withContext(Dispatchers.IO) {
-            repository.insert(timeRecord)
+    suspend fun insert(timeRecord: TimeRecord): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                repository.insert(timeRecord)
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
     }
 
-    suspend fun delete(timeRecord: TimeRecord) {
-        withContext(Dispatchers.IO) {
-            repository.delete(timeRecord)
+    suspend fun delete(timeRecord: TimeRecord): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                repository.delete(timeRecord)
+                Result.success(Unit)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
     }
 }
